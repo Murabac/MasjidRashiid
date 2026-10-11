@@ -1,0 +1,520 @@
+@font-face {
+  font-family: Amiri;
+  src: url("../fonts/Amiri-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Amiri;
+  src: url("../fonts/Amiri-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("../fonts/SourceSans3.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #03100b;
+  overflow: hidden;
+  cursor: none;
+  color: #f6f1e1;
+  font-family: "Source Sans 3", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+#stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  color: #f6f1e1;
+  background: radial-gradient(ellipse at 20% 0%, #0e3a29 0%, #082418 45%, #04140d 100%);
+}
+
+#left {
+  position: absolute;
+  left: 40px;
+  top: 30px;
+  width: 830px;
+  height: 1020px;
+}
+
+#right {
+  position: absolute;
+  left: 900px;
+  top: 40px;
+  width: 980px;
+  height: 1000px;
+}
+
+#mosque {
+  height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #e3c46b;
+  font-weight: 600;
+}
+
+#name-en {
+  font-size: 36px;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+#name-ar {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#clock {
+  font-size: 132px;
+  font-weight: 300;
+  text-align: center;
+  line-height: 142px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+#clock small {
+  font-size: 52px;
+  margin-left: 12px;
+  color: #e3c46b;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+#dates {
+  text-align: center;
+  font-size: 32px;
+  color: #cfd9cf;
+  line-height: 42px;
+  height: 88px;
+  margin-top: 2px;
+}
+
+#dates b {
+  color: #e3c46b;
+  font-weight: 600;
+}
+
+#next {
+  margin: 8px 0;
+  height: 118px;
+  border-radius: 22px;
+  background: rgba(227, 196, 107, 0.12);
+  border: 2px solid rgba(227, 196, 107, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#next .l {
+  font-size: 30px;
+  color: #e3c46b;
+  line-height: 36px;
+}
+
+#next .l .ar {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 34px;
+  font-weight: 700;
+  margin-left: 12px;
+  unicode-bidi: isolate;
+}
+
+#next .v {
+  font-size: 64px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 70px;
+}
+
+#rows { margin-top: 4px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 200px 200px;
+  align-items: center;
+  height: 68px;
+  margin-bottom: 6px;
+  padding: 0 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 40px;
+}
+
+.row.head {
+  background: none;
+  height: 40px;
+  font-size: 24px;
+  color: #e3c46b;
+  margin-bottom: 0;
+}
+
+.row .n {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-right: 24px;
+  min-width: 0;
+}
+
+.row .n .ar {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-style: normal;
+  font-size: 38px;
+  font-weight: 700;
+  color: #cdbb85;
+  line-height: 1;
+}
+
+.row .t {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.row.sun {
+  opacity: 0.7;
+  height: 56px;
+  font-size: 34px;
+}
+
+.row.sun .n .ar { font-size: 32px; }
+
+.row.hl {
+  background: linear-gradient(90deg, #c9a23c, #e8cd7a);
+  color: #10281c;
+  font-weight: 700;
+}
+
+.row.hl .n .ar { color: #4a3b0d; }
+
+.row.past { opacity: 0.45; }
+
+#frame,
+#iq {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+#frame {
+  border: 3px solid rgba(227, 196, 107, 0.6);
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 36px 22px;
+}
+
+#mode-ar {
+  min-height: 48px;
+  text-align: center;
+  color: #e3c46b;
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 48px;
+}
+
+#athkaar-fit {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#athkaar-text {
+  width: 100%;
+  text-align: center;
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-weight: 700;
+  line-height: 1.65;
+  color: #f6f1e1;
+}
+
+#athkaar-text p { margin: 0; }
+
+#athkaar-note {
+  margin-top: 12px;
+  text-align: center;
+  color: #e3c46b;
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+#athkaar-note:empty { display: none; }
+
+#slide-count {
+  height: 36px;
+  text-align: center;
+  color: #cfd9cf;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+#iq {
+  border: 3px solid #e3c46b;
+  background: linear-gradient(160deg, #0f4a33, #07251a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#iq .p {
+  font-size: 96px;
+  font-weight: 700;
+  color: #e3c46b;
+  line-height: 1.05;
+}
+
+#iq .a {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 120px;
+  font-weight: 700;
+  color: #f6f1e1;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+
+#iq .l {
+  font-size: 44px;
+  color: #cfd9cf;
+}
+
+#iq .c {
+  font-size: 220px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  line-height: 230px;
+}
+
+#full {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 3;
+}
+
+#full .a {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 180px;
+  font-weight: 700;
+  color: #e3c46b;
+  line-height: 1.1;
+}
+
+#full .p {
+  font-size: 84px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+#full .s {
+  font-size: 72px;
+  margin-bottom: 18px;
+}
+
+#full .m {
+  font-size: 42px;
+  color: #aab8ae;
+}
+
+#frame[hidden],
+#iq[hidden],
+#full[hidden],
+.preview[hidden],
+.settings[hidden] {
+  display: none;
+}
+
+.preview {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 6px 16px;
+  background: #8c2f2f;
+  color: #fff;
+  font-size: 18px;
+}
+
+.settings {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  overflow: auto;
+  background: #04140d;
+  color: #f6f1e1;
+  padding: 48px 64px 80px;
+  cursor: auto;
+}
+
+.settings,
+.settings * { cursor: auto; }
+
+.settings h2 {
+  margin: 0 0 8px;
+  color: #e3c46b;
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.settings .lead {
+  margin: 0 0 28px;
+  max-width: 760px;
+  color: #cfd9cf;
+  line-height: 1.45;
+  font-size: 18px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.settings h3,
+.fields h3 {
+  grid-column: 1 / -1;
+  margin: 18px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #e3c46b;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  color: #cfd9cf;
+}
+
+input, select, textarea {
+  width: 100%;
+  background: #0c2418;
+  color: #f6f1e1;
+  border: 1px solid rgba(227, 196, 107, 0.45);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 18px;
+}
+
+textarea {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 32px;
+  line-height: 1.7;
+  min-height: 160px;
+  resize: vertical;
+}
+
+.list-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.list-switch button.is-on {
+  background: #e3c46b;
+  color: #10281c;
+  font-weight: 700;
+}
+
+.athkaar-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 18px;
+}
+
+.athkaar-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.athkaar-item p {
+  margin: 0;
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 26px;
+  line-height: 1.6;
+  text-align: right;
+  direction: rtl;
+}
+
+.athkaar-item .note {
+  color: #e3c46b;
+  font-size: 20px;
+}
+
+.athkaar-empty {
+  color: #cfd9cf;
+  margin: 0 0 12px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #e3c46b;
+  outline-offset: 1px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+button {
+  background: transparent;
+  color: #e3c46b;
+  border: 1px solid #e3c46b;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font: inherit;
+  font-size: 18px;
+}
+
+button.primary {
+  background: #e3c46b;
+  color: #10281c;
+  font-weight: 700;
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masjid Rashiid</title>
+  <link rel="stylesheet" href="css/screen.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="left">
+      <div id="mosque">
+        <span id="name-en">Masjid Rashiid</span>
+        <span id="name-ar" lang="ar">مسجد رشيد</span>
+      </div>
+      <div id="clock">--:--:--</div>
+      <div id="dates"></div>
+      <div id="next">
+        <div class="l" id="next-label"></div>
+        <div class="v" id="next-value">--:--</div>
+      </div>
+      <div id="rows"></div>
+    </div>
+    <div id="right">
+      <div id="frame">
+        <p id="mode-ar" lang="ar" dir="rtl"></p>
+        <div id="athkaar-fit">
+          <div id="athkaar-text" lang="ar" dir="rtl"></div>
+          <p id="athkaar-note" lang="ar" dir="rtl"></p>
+        </div>
+        <p id="slide-count"></p>
+      </div>
+      <div id="iq" hidden>
+        <div class="p" id="iq-en"></div>
+        <div class="a" id="iq-ar" lang="ar" dir="rtl"></div>
+        <div class="l">Iqamah in</div>
+        <div class="c" id="iq-count">00:00</div>
+      </div>
+    </div>
+    <div id="full" hidden>
+      <div class="a" id="full-ar" lang="ar" dir="rtl"></div>
+      <div class="p" id="full-en"></div>
+      <div class="s">Salah in progress</div>
+      <div class="m">Please silence your phones</div>
+    </div>
+  </div>
+
+  <p class="preview" id="preview" hidden>Preview clock — not for the hall screen</p>
+
+  <form class="settings" id="settings" hidden>
+    <h2>Screen settings</h2>
+    <p class="lead">Press S to open this panel, A to add athkaar, and Escape to close. Iqamah, the masjid name, and added athkaar are saved on this computer only.</p>
+    <div class="fields">
+      <label>English name <input id="set-name-en" autocomplete="off"></label>
+      <label>Arabic name <input id="set-name-ar" lang="ar" dir="rtl" autocomplete="off"></label>
+      <label>Calculation
+        <select id="set-method">
+          <option value="MWL">Muslim World League</option>
+          <option value="Egypt">Egyptian General Authority</option>
+          <option value="Makkah">Umm al-Qura</option>
+          <option value="Karachi">Karachi</option>
+          <option value="ISNA">ISNA</option>
+        </select>
+      </label>
+      <label>Asr
+        <select id="set-asr">
+          <option value="Standard">Shafi'i</option>
+          <option value="Hanafi">Hanafi</option>
+        </select>
+      </label>
+      <label>Latitude <input id="set-lat" inputmode="decimal"></label>
+      <label>Longitude <input id="set-lng" inputmode="decimal"></label>
+
+      <h3>Iqamah, minutes after adhan</h3>
+      <label>Fajr <input id="set-iq-fajr" type="number" min="0" max="180"></label>
+      <label>Dhuhr <input id="set-iq-dhuhr" type="number" min="0" max="180"></label>
+      <label>Asr <input id="set-iq-asr" type="number" min="0" max="180"></label>
+      <label>Maghrib <input id="set-iq-maghrib" type="number" min="0" max="180"></label>
+      <label>Isha <input id="set-iq-isha" type="number" min="0" max="180"></label>
+      <label>Jumu'ah <input id="set-iq-jumuah" type="number" min="0" max="180"></label>
+
+      <h3>Athkaar timing</h3>
+      <label>Salah length, minutes <input id="set-salah" type="number" min="1" max="180"></label>
+      <label>Jumu'ah length, minutes <input id="set-jumuah" type="number" min="1" max="180"></label>
+      <label>After-salah athkaar, minutes <input id="set-after" type="number" min="1" max="180"></label>
+      <label>After-salah slide, seconds <input id="set-after-slide" type="number" min="5" max="120"></label>
+      <label>General slide, seconds <input id="set-general-slide" type="number" min="5" max="120"></label>
+    </div>
+    <div class="actions">
+      <button type="button" class="primary" id="set-close">Close</button>
+      <button type="button" id="set-reset">Restore defaults</button>
+    </div>
+  </form>
+
+  <form class="settings" id="athkaar-editor" hidden>
+    <h2>Athkaar lists</h2>
+    <p class="lead">Press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select and saved on this computer.</p>
+    <div class="list-switch" id="athkaar-switch">
+      <button type="button" data-list="after">After salah</button>
+      <button type="button" data-list="general">General</button>
+      <button type="button" data-list="morning">Morning</button>
+      <button type="button" data-list="evening">Evening</button>
+    </div>
+    <h3>Already on the screen</h3>
+    <div id="athkaar-builtin" class="athkaar-catalog"></div>
+    <h3>Added on this computer</h3>
+    <div id="athkaar-custom" class="athkaar-catalog"></div>
+    <label>Arabic athkaar
+      <textarea id="athkaar-new" lang="ar" dir="rtl" rows="5" placeholder="سُبْحَانَ اللَّهِ وَبِحَمْدِهِ"></textarea>
+    </label>
+    <label>Note, optional
+      <input id="athkaar-new-note" lang="ar" dir="rtl" placeholder="ثلاث مرات" autocomplete="off">
+    </label>
+    <div class="actions">
+      <button type="button" class="primary" id="athkaar-add">Add to this list</button>
+      <button type="button" id="athkaar-close">Close</button>
+    </div>
+  </form>
+
+  <!-- Prayer times: PrayTimes.org (Hamid Zarrabi-Zadeh), vendored for offline use. -->
+  <script src="vendor/PrayTimes.js"></script>
+  <script src="js/athkaar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
