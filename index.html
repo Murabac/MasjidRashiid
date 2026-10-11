@@ -43,13 +43,19 @@
       <div class="s">Salah in progress</div>
       <div class="m">Please silence your phones</div>
     </div>
+    <div id="notice" hidden>
+      <div class="icon" id="notice-icon"></div>
+      <div class="so" id="notice-so" lang="so"></div>
+      <div class="ar" id="notice-ar" lang="ar" dir="rtl"></div>
+      <div class="en" id="notice-en"></div>
+    </div>
   </div>
 
   <p class="preview" id="preview" hidden>Preview clock — not for the hall screen</p>
 
   <form class="settings" id="settings" hidden>
     <h2>Screen settings</h2>
-    <p class="lead">Press S to open this panel, A to add athkaar, and Escape to close. Iqamah, the masjid name, and added athkaar are saved on this computer only.</p>
+    <p class="lead">Press S to open this panel, A to add athkaar, and Escape to close. Iqamah, the masjid name, added athkaar, and the reminders are saved on this computer only. Reminders of what not to do cover the screen for a few seconds each minute, and they pause during iqamah and salah.</p>
     <div class="fields">
       <label>English name <input id="set-name-en" autocomplete="off"></label>
       <label>Arabic name <input id="set-name-ar" lang="ar" dir="rtl" autocomplete="off"></label>
@@ -85,6 +91,15 @@
       <label>After-salah athkaar, minutes <input id="set-after" type="number" min="1" max="180"></label>
       <label>After-salah slide, seconds <input id="set-after-slide" type="number" min="5" max="120"></label>
       <label>General slide, seconds <input id="set-general-slide" type="number" min="5" max="120"></label>
+
+      <h3>What not to do in the masjid</h3>
+      <label>Show for, seconds <input id="set-notice-for" type="number" min="3" max="30"></label>
+      <label>Repeat every, seconds <input id="set-notice-every" type="number" min="15" max="600"></label>
+      <label>Show these reminders <input id="set-notice-on" type="checkbox"></label>
+    </div>
+    <div id="notice-list" class="notice-list"></div>
+    <div class="actions notice-add">
+      <button type="button" id="notice-add">Add a reminder</button>
     </div>
     <div class="actions">
       <button type="button" class="primary" id="set-close">Close</button>

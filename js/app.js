@@ -12,12 +12,52 @@
     { key: "isha", en: "Isha", ar: "العشاء" }
   ];
 
+  var NOTICE_ICONS = {
+    phone: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="8" width="22" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="4"/><path d="M21 40 h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M42 24 c4 3 4 13 0 16 M48 18 c8 6 8 22 0 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M40 42 L56 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    talk: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="4"/><path d="M20 24 h16 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 h-6 l-6 6 v-6 h-4 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 48 L48 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    walk: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="34" cy="20" r="3.5" fill="currentColor"/><path d="M34 25 l-6 8 h8 l4 12 M28 33 l-6 12 M36 29 l8 4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 48 L48 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    run: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="38" cy="18" r="3.5" fill="currentColor"/><path d="M36 22 l-10 6 6 4 -2 10 M32 32 l10 2 M28 42 l-8 8 M34 42 l8 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 48 L48 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    rubbish: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 26 h16 l-1.5 16 h-13 z M22 26 h20 M28 23 h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M16 48 L48 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    food: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 18 v16 M21 18 v8 M27 18 v8 M24 34 v12 M36 18 h6 v8 a6 6 0 0 1 -6 6 v14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 48 L48 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>'
+  };
+  var NOTICE_ICON_NAMES = {
+    phone: "Phone",
+    talk: "Talking",
+    walk: "Walking",
+    run: "Running",
+    rubbish: "Rubbish",
+    food: "Food"
+  };
+
+  function defaultNotices() {
+    return [
+      { icon: "phone", so: "Aamusiya telefoonnadiinna", ar: "أَسْكِتُوا هَوَاتِفَكُمْ", en: "Silence your phones" },
+      { icon: "talk", so: "Ha ku hadlina masjidka", ar: "لَا تَتَحَدَّثُوا فِي الْمَسْجِدِ", en: "Do not talk in the masjid" },
+      { icon: "walk", so: "Ha ka hor marina qofka tukada", ar: "لَا تَمُرُّوا أَمَامَ الْمُصَلِّي", en: "Do not walk in front of someone praying" },
+      { icon: "run", so: "Ha ku orodina masjidka", ar: "لَا تَرْكُضُوا فِي الْمَسْجِدِ", en: "Do not run in the masjid" },
+      { icon: "rubbish", so: "Ha ku tuurina qashinka", ar: "لَا تُلْقُوا الْأَوْسَاخَ", en: "Do not throw rubbish" },
+      { icon: "food", so: "Ha cunina hana cabina musallada", ar: "لَا تَأْكُلُوا وَلَا تَشْرَبُوا فِي الْمُصَلَّى", en: "Do not eat or drink in the prayer hall" }
+    ];
+  }
+
+  function cleanNotice(item) {
+    if (!item || typeof item !== "object") return null;
+    var icon = NOTICE_ICONS[item.icon] ? item.icon : "phone";
+    var so = String(item.so || "").trim();
+    var ar = String(item.ar || "").trim();
+    var en = String(item.en || "").trim();
+    if (!so && !ar && !en) return null;
+    return { icon: icon, so: so, ar: ar, en: en };
+  }
+
   var pt = new PrayTimes("MWL");
   var settings = loadSettings();
   var virtualOrigin = null;
   var virtualStart = Date.now();
   var timesSig = "";
   var slideSig = "";
+  var noticeSig = "";
+  var noticeEditorReady = false;
 
   var el = {
     nameEn: document.getElementById("name-en"),
@@ -40,6 +80,11 @@
     full: document.getElementById("full"),
     fullAr: document.getElementById("full-ar"),
     fullEn: document.getElementById("full-en"),
+    notice: document.getElementById("notice"),
+    noticeIcon: document.getElementById("notice-icon"),
+    noticeSo: document.getElementById("notice-so"),
+    noticeAr: document.getElementById("notice-ar"),
+    noticeEn: document.getElementById("notice-en"),
     preview: document.getElementById("preview"),
     settings: document.getElementById("settings"),
     stage: document.getElementById("stage")
@@ -58,7 +103,11 @@
       jumuahMinutes: 40,
       afterMinutes: 60,
       afterSlide: 25,
-      generalSlide: 30
+      generalSlide: 30,
+      noticesOn: true,
+      noticeFor: 5,
+      noticeEvery: 60,
+      notices: defaultNotices()
     };
   }
 
@@ -88,6 +137,15 @@
       base.afterMinutes = clamp(raw.afterMinutes, base.afterMinutes, 1, 180);
       base.afterSlide = clamp(raw.afterSlide, base.afterSlide, 5, 120);
       base.generalSlide = clamp(raw.generalSlide, base.generalSlide, 5, 120);
+      base.noticesOn = raw.noticesOn !== false;
+      base.noticeFor = clamp(raw.noticeFor, base.noticeFor, 3, 30);
+      base.noticeEvery = clamp(raw.noticeEvery, base.noticeEvery, 15, 600);
+      if (base.noticeFor >= base.noticeEvery) base.noticeEvery = Math.min(600, base.noticeFor + 1);
+      if (Array.isArray(raw.notices)) {
+        var loaded = raw.notices.map(cleanNotice).filter(Boolean);
+        var missingSomali = loaded.length && loaded.every(function (item) { return !item.so; });
+        base.notices = missingSomali ? defaultNotices() : loaded;
+      }
     } catch (err) {
       return defaultSettings();
     }
@@ -99,6 +157,7 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     timesSig = "";
     slideSig = "";
+    noticeSig = "";
     applyNames();
     tick();
   }
@@ -472,6 +531,30 @@
     fitAthkaar();
   }
 
+  function renderNotice(moment, phase) {
+    var messages = settings.notices.filter(function (item) {
+      return item.so || item.ar || item.en;
+    });
+    var p = partsInHargeisa(moment);
+    var total = p.hour * 3600 + p.minute * 60 + p.second;
+    var into = total % settings.noticeEvery;
+    var show = settings.noticesOn && messages.length && phase.kind !== "salah" && into < settings.noticeFor;
+    el.notice.hidden = !show;
+    if (!show) {
+      noticeSig = "";
+      return;
+    }
+    var index = Math.floor(total / settings.noticeEvery) % messages.length;
+    var item = messages[index];
+    var id = index + ":" + item.icon + ":" + item.so + ":" + item.ar + ":" + item.en;
+    if (id === noticeSig) return;
+    noticeSig = id;
+    el.noticeIcon.innerHTML = NOTICE_ICONS[item.icon] || NOTICE_ICONS.phone;
+    el.noticeSo.textContent = item.so;
+    el.noticeAr.textContent = item.ar;
+    el.noticeEn.textContent = item.en;
+  }
+
   function tick() {
     var moment = now();
     var schedule = collect(moment);
@@ -480,6 +563,7 @@
     renderNext(schedule, moment);
     renderTimes(schedule, phase, moment);
     renderStage(schedule, phase, moment);
+    renderNotice(moment, phase);
   }
 
   function fitStage() {
@@ -508,7 +592,9 @@
       "set-jumuah": settings.jumuahMinutes,
       "set-after": settings.afterMinutes,
       "set-after-slide": settings.afterSlide,
-      "set-general-slide": settings.generalSlide
+      "set-general-slide": settings.generalSlide,
+      "set-notice-for": settings.noticeFor,
+      "set-notice-every": settings.noticeEvery
     };
   }
 
@@ -517,6 +603,8 @@
     Object.keys(map).forEach(function (id) {
       document.getElementById(id).value = map[id];
     });
+    document.getElementById("set-notice-on").checked = settings.noticesOn !== false;
+    renderNoticeEditor();
   }
 
   function readForm() {
@@ -540,7 +628,79 @@
     next.afterMinutes = clamp(document.getElementById("set-after").value, next.afterMinutes, 1, 180);
     next.afterSlide = clamp(document.getElementById("set-after-slide").value, next.afterSlide, 5, 120);
     next.generalSlide = clamp(document.getElementById("set-general-slide").value, next.generalSlide, 5, 120);
+    next.noticesOn = document.getElementById("set-notice-on").checked;
+    next.noticeFor = clamp(document.getElementById("set-notice-for").value, next.noticeFor, 3, 30);
+    next.noticeEvery = clamp(document.getElementById("set-notice-every").value, next.noticeEvery, 15, 600);
+    if (next.noticeFor >= next.noticeEvery) next.noticeEvery = Math.min(600, next.noticeFor + 1);
+    if (!noticeEditorReady) {
+      next.notices = settings.notices.map(function (item) {
+        return { icon: item.icon, so: item.so, ar: item.ar, en: item.en };
+      });
+    } else {
+      next.notices = [];
+      document.querySelectorAll("#notice-list .notice-row").forEach(function (row) {
+        var icon = row.querySelector(".notice-icon").value;
+        next.notices.push({
+          icon: NOTICE_ICONS[icon] ? icon : "phone",
+          so: row.querySelector(".notice-so").value.trim(),
+          ar: row.querySelector(".notice-ar").value.trim(),
+          en: row.querySelector(".notice-en").value.trim()
+        });
+      });
+    }
     return next;
+  }
+
+  function renderNoticeEditor() {
+    var box = document.getElementById("notice-list");
+    box.replaceChildren();
+    settings.notices.forEach(function (item, index) {
+      var row = document.createElement("div");
+      row.className = "notice-row";
+      var select = document.createElement("select");
+      select.className = "notice-icon";
+      Object.keys(NOTICE_ICON_NAMES).forEach(function (key) {
+        var option = document.createElement("option");
+        option.value = key;
+        option.textContent = NOTICE_ICON_NAMES[key];
+        select.appendChild(option);
+      });
+      select.value = NOTICE_ICONS[item.icon] ? item.icon : "phone";
+      var so = document.createElement("input");
+      so.className = "notice-so";
+      so.lang = "so";
+      so.value = item.so || "";
+      so.placeholder = "Aamusiya telefoonnadiinna";
+      so.setAttribute("autocomplete", "off");
+      var ar = document.createElement("input");
+      ar.className = "notice-ar";
+      ar.lang = "ar";
+      ar.dir = "rtl";
+      ar.value = item.ar;
+      ar.placeholder = "لَا تَفْعَلُوا";
+      ar.setAttribute("autocomplete", "off");
+      var en = document.createElement("input");
+      en.className = "notice-en";
+      en.value = item.en;
+      en.placeholder = "Do not…";
+      en.setAttribute("autocomplete", "off");
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", function () {
+        var next = readForm();
+        next.notices.splice(index, 1);
+        saveSettings(next);
+        renderNoticeEditor();
+      });
+      row.appendChild(select);
+      row.appendChild(so);
+      row.appendChild(ar);
+      row.appendChild(en);
+      row.appendChild(remove);
+      box.appendChild(row);
+    });
+    noticeEditorReady = true;
   }
 
   function openSettings() {
@@ -668,6 +828,14 @@
   });
   el.settings.addEventListener("change", function () {
     saveSettings(readForm());
+  });
+  document.getElementById("notice-add").addEventListener("click", function () {
+    var next = readForm();
+    next.notices.push({ icon: "phone", so: "", ar: "", en: "" });
+    saveSettings(next);
+    renderNoticeEditor();
+    var fields = document.querySelectorAll("#notice-list .notice-so");
+    if (fields.length) fields[fields.length - 1].focus();
   });
   document.getElementById("set-close").addEventListener("click", closeSettings);
   document.getElementById("set-reset").addEventListener("click", function () {

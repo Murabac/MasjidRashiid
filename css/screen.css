@@ -352,9 +352,63 @@ html, body {
   color: #aab8ae;
 }
 
+#notice {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 72px 100px;
+}
+
+#notice .icon {
+  width: 180px;
+  height: 180px;
+  color: #e3c46b;
+  margin-bottom: 20px;
+}
+
+#notice .icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#notice .so {
+  max-width: 1600px;
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f6f1e1;
+}
+
+#notice .ar {
+  max-width: 1500px;
+  margin-top: 22px;
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #e3c46b;
+}
+
+#notice .en {
+  max-width: 1400px;
+  margin-top: 14px;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #cfd9cf;
+}
+
 #frame[hidden],
 #iq[hidden],
 #full[hidden],
+#notice[hidden],
 .preview[hidden],
 .settings[hidden] {
   display: none;
@@ -495,6 +549,30 @@ textarea {
 input:focus, select:focus, textarea:focus {
   outline: 2px solid #e3c46b;
   outline-offset: 1px;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.notice-row {
+  display: grid;
+  grid-template-columns: 150px 1.3fr 1.2fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.notice-row .notice-ar {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.actions.notice-add {
+  margin-top: 12px;
 }
 
 .actions {
