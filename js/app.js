@@ -935,6 +935,7 @@
 
   function closeAnnounce() {
     announcePanel().hidden = true;
+    resumeFill();
   }
 
   function openAnnounce() {
@@ -1184,10 +1185,36 @@
     }
   }
 
+  var fillTimers = [];
+  var wantFill = false;
+
+  function resumeFill() {
+    wantFill = true;
+    fillTimers.forEach(clearTimeout);
+    fillTimers = [];
+    enterFullscreen();
+    syncFillHint();
+    [0, 50, 200, 500, 1000].forEach(function (wait) {
+      fillTimers.push(setTimeout(function () {
+        if (!wantFill || inFullscreen()) {
+          if (inFullscreen()) wantFill = false;
+          syncFillHint();
+          return;
+        }
+        enterFullscreen();
+        syncFillHint();
+      }, wait));
+    });
+  }
+
   function onFullscreenGesture(event) {
     if (event && (event.key === "Escape" || event.key === "Esc")) return;
     var target = event && event.target;
-    if (target && target.closest && target.closest("#manage, #settings, #athkaar-editor, #announcements")) return;
+    if (target && target.closest && target.closest("#manage, #settings, #athkaar-editor, #announcements")) {
+      if (wantFill) resumeFill();
+      return;
+    }
+    wantFill = false;
     enterFullscreen();
   }
 
@@ -1206,11 +1233,13 @@
   document.getElementById("announce-close").addEventListener("click", closeAnnounce);
   document.getElementById("announce-pick").addEventListener("click", function () {
     if (window.MasjidSync && MasjidSync.mode() === "follow") return;
+    wantFill = true;
     document.getElementById("announce-file").click();
   });
   document.getElementById("announce-file").addEventListener("change", function (event) {
     var file = event.target.files && event.target.files[0];
     event.target.value = "";
+    resumeFill();
     if (!file || (window.MasjidSync && MasjidSync.mode() === "follow")) return;
     var status = document.getElementById("announce-status");
     status.textContent = "Saving the image…";
@@ -1225,13 +1254,22 @@
           status.textContent = result && result.status === 413
             ? "That photo is too large. Try a smaller one."
             : "The image could not be saved. Please try again.";
+          resumeFill();
           return;
         }
         saveAnnouncement({ on: true, rev: rev });
+        closeAnnounce();
       });
     }).catch(function () {
       status.textContent = "That file could not be used. Choose a photo.";
+      resumeFill();
     });
+  });
+  window.addEventListener("focus", function () {
+    if (wantFill) resumeFill();
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && wantFill) resumeFill();
   });
   document.getElementById("announce-on").addEventListener("change", function (event) {
     var item = settings.announcement || { on: false, rev: "" };
