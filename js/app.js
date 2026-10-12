@@ -1108,9 +1108,12 @@
       if (localPreview && localPreview.url) URL.revokeObjectURL(localPreview.url);
       localPreview = { rev: rev, url: URL.createObjectURL(blob) };
       var upload = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.uploadImage(blob) : Promise.resolve(true);
-      return upload.then(function (ok) {
-        if (!ok) {
-          status.textContent = "The image could not be saved. Try a smaller photo.";
+      return upload.then(function (result) {
+        var saved = result === true || (result && result.ok);
+        if (!saved) {
+          status.textContent = result && result.status === 413
+            ? "That photo is too large. Try a smaller one."
+            : "The image could not be saved. Please try again.";
           return;
         }
         saveAnnouncement({ on: true, rev: rev });

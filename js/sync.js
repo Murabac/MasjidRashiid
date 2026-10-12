@@ -68,15 +68,15 @@ var MasjidSync = (function () {
   }
 
   function uploadImage(blob) {
-    if (mode() !== "live") return Promise.resolve(false);
+    if (mode() !== "live") return Promise.resolve({ ok: false, status: 0 });
     return fetch("/api/announcement", {
       method: "PUT",
       headers: { "content-type": blob.type || "image/jpeg" },
       body: blob
     }).then(function (response) {
-      return response.ok;
+      return { ok: response.ok, status: response.status };
     }).catch(function () {
-      return false;
+      return { ok: false, status: 0 };
     });
   }
 
