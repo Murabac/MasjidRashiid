@@ -410,6 +410,7 @@ html, body {
 #full[hidden],
 #notice[hidden],
 .preview[hidden],
+#fill-hint[hidden],
 .settings[hidden] {
   display: none;
 }
@@ -424,6 +425,23 @@ html, body {
   background: #8c2f2f;
   color: #fff;
   font-size: 18px;
+}
+
+#fill-hint {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  margin: 0;
+  padding: 10px 18px;
+  border: 1px solid #e3c46b;
+  border-radius: 999px;
+  background: rgba(4, 20, 13, 0.94);
+  color: #e3c46b;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .settings {

@@ -876,38 +876,46 @@
     if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function () {});
   } catch (err) {}
 
-  function tvBrowser() {
-    var ua = navigator.userAgent || "";
-    if (/Smart-?TV|Tizen|Web0S|WebOS|BRAVIA|AFT|CrKey|HbbTV|Viera|NetCast|VIDAA|GoogleTV|Android TV|AppleTV/i.test(ua)) return true;
-    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(hover: none)").matches;
-    return !!coarse && Math.min(screen.width, screen.height) >= 720;
+  function inFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  function syncFillHint() {
+    var hint = document.getElementById("fill-hint");
+    if (hint) hint.hidden = inFullscreen();
   }
 
   function enterFullscreen() {
-    if (document.fullscreenElement || document.webkitFullscreenElement) return;
+    if (inFullscreen()) return;
     var root = document.documentElement;
     var request = root.requestFullscreen || root.webkitRequestFullscreen;
     if (!request) return;
     function plain() {
       try {
         var again = request.call(root);
-        if (again && again.catch) again.catch(function () {});
+        if (again && again.then) again.then(syncFillHint, function () {});
       } catch (err) {}
     }
     try {
       var pending = request.call(root, { navigationUI: "hide" });
-      if (pending && pending.then) pending.then(null, plain);
+      if (pending && pending.then) pending.then(syncFillHint, plain);
     } catch (err) {
       plain();
     }
   }
 
-  if (tvBrowser()) {
+  function onFullscreenGesture(event) {
+    if (event && (event.key === "Escape" || event.key === "Esc")) return;
     enterFullscreen();
-    document.addEventListener("keydown", enterFullscreen);
-    document.addEventListener("pointerdown", enterFullscreen);
-    document.addEventListener("click", enterFullscreen);
   }
+
+  enterFullscreen();
+  syncFillHint();
+  ["keydown", "pointerup", "touchend", "click"].forEach(function (type) {
+    document.addEventListener(type, onFullscreenGesture);
+  });
+  document.addEventListener("fullscreenchange", syncFillHint);
+  document.addEventListener("webkitfullscreenchange", syncFillHint);
 
   if (window.MasjidSync && MasjidSync.mode() !== "off") {
     var sharedLead = "Press S to open this panel, A to add athkaar, and Escape to close. ";
