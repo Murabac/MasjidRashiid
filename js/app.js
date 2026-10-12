@@ -107,7 +107,8 @@
       noticesOn: true,
       noticeFor: 5,
       noticeEvery: 60,
-      notices: defaultNotices()
+      notices: defaultNotices(),
+      announcement: { on: false, rev: "" }
     };
   }
 
@@ -144,6 +145,10 @@
         var loaded = raw.notices.map(cleanNotice).filter(Boolean);
         var missingSomali = loaded.length && loaded.every(function (item) { return !item.so; });
         base.notices = missingSomali ? defaultNotices() : loaded;
+      }
+      var ann = raw.announcement;
+      if (ann && typeof ann === "object" && ann.rev) {
+        base.announcement = { on: ann.on === true, rev: String(ann.rev).slice(0, 40) };
       }
     } catch (err) {
       return defaultSettings();
@@ -569,6 +574,7 @@
     renderTimes(schedule, phase, moment);
     renderStage(schedule, phase, moment);
     renderNotice(moment, phase);
+    renderAnnounce();
   }
 
   function fitStage() {
@@ -653,6 +659,7 @@
         });
       });
     }
+    next.announcement = settings.announcement || { on: false, rev: "" };
     return next;
   }
 
@@ -708,8 +715,93 @@
     noticeEditorReady = true;
   }
 
+  var localPreview = null;
+
+  function announcePanel() {
+    return document.getElementById("announcements");
+  }
+
+  function announcementSrc() {
+    var item = settings.announcement || {};
+    if (!item.on || !item.rev) return "";
+    if (localPreview && localPreview.rev === item.rev) return localPreview.url;
+    if (window.MasjidSync && MasjidSync.mode() !== "off") return MasjidSync.imageUrl(item.rev);
+    return "";
+  }
+
+  function renderAnnounce() {
+    var src = announcementSrc();
+    var box = document.getElementById("announce");
+    var img = document.getElementById("announce-img");
+    box.hidden = !src;
+    if (src && img.getAttribute("src") !== src) img.src = src;
+  }
+
+  function renderAnnouncePanel() {
+    var item = settings.announcement || { on: false, rev: "" };
+    var preview = document.getElementById("announce-preview");
+    var status = document.getElementById("announce-status");
+    var src = "";
+    if (localPreview && item.rev && localPreview.rev === item.rev) src = localPreview.url;
+    else if (item.rev && window.MasjidSync && MasjidSync.mode() !== "off") src = MasjidSync.imageUrl(item.rev);
+    preview.hidden = !src;
+    if (src) preview.src = src;
+    document.getElementById("announce-on").checked = !!item.on && !!item.rev;
+    if (window.MasjidSync && MasjidSync.mode() === "follow") {
+      status.textContent = "This screen follows rashiid.m2btek.com. Change the announcement from a phone on that website.";
+      return;
+    }
+    if (!item.rev) status.textContent = "No image yet.";
+    else if (item.on) status.textContent = "This image is covering every screen.";
+    else status.textContent = "Saved, and hidden from the hall screen.";
+  }
+
+  function saveAnnouncement(nextAnn) {
+    var next = settingsFrom(settings);
+    next.announcement = nextAnn;
+    var localOnly = !window.MasjidSync || MasjidSync.mode() !== "live";
+    saveSettings(next, localOnly);
+    renderAnnouncePanel();
+  }
+
+  function fitImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, 1920 / img.width, 1080 / img.height);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function (blob) {
+          if (!blob) reject(new Error("image"));
+          else resolve(blob);
+        }, "image/jpeg", 0.82);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("image"));
+      };
+      img.src = url;
+    });
+  }
+
+  function closeAnnounce() {
+    announcePanel().hidden = true;
+  }
+
+  function openAnnounce() {
+    closeSettings();
+    closeAthkaar();
+    renderAnnouncePanel();
+    announcePanel().hidden = false;
+  }
+
   function openSettings() {
     closeAthkaar();
+    closeAnnounce();
     fillForm();
     el.settings.hidden = false;
   }
@@ -785,6 +877,7 @@
 
   function openAthkaar() {
     closeSettings();
+    closeAnnounce();
     renderAthkaarEditor();
     athkaarPanel().hidden = false;
     document.getElementById("athkaar-new").focus();
@@ -813,6 +906,7 @@
     if (event.key === "Escape") {
       closeSettings();
       closeAthkaar();
+      closeAnnounce();
       return;
     }
     if (event.metaKey || event.ctrlKey || event.altKey || typing) return;
@@ -844,7 +938,9 @@
   });
   document.getElementById("set-close").addEventListener("click", closeSettings);
   document.getElementById("set-reset").addEventListener("click", function () {
-    saveSettings(defaultSettings());
+    var next = defaultSettings();
+    next.announcement = settings.announcement;
+    saveSettings(next);
     fillForm();
   });
   document.getElementById("athkaar-switch").addEventListener("click", function (event) {
@@ -903,8 +999,72 @@
 
   function onFullscreenGesture(event) {
     if (event && (event.key === "Escape" || event.key === "Esc")) return;
+    var target = event && event.target;
+    if (target && target.closest && target.closest("#manage, #settings, #athkaar-editor, #announcements")) return;
     enterFullscreen();
   }
+
+  document.getElementById("manage-settings").addEventListener("click", function (event) {
+    event.stopPropagation();
+    openSettings();
+  });
+  document.getElementById("manage-athkaar").addEventListener("click", function (event) {
+    event.stopPropagation();
+    openAthkaar();
+  });
+  document.getElementById("manage-announce").addEventListener("click", function (event) {
+    event.stopPropagation();
+    openAnnounce();
+  });
+  document.getElementById("announce-close").addEventListener("click", closeAnnounce);
+  document.getElementById("announce-pick").addEventListener("click", function () {
+    if (window.MasjidSync && MasjidSync.mode() === "follow") return;
+    document.getElementById("announce-file").click();
+  });
+  document.getElementById("announce-file").addEventListener("change", function (event) {
+    var file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file || (window.MasjidSync && MasjidSync.mode() === "follow")) return;
+    var status = document.getElementById("announce-status");
+    status.textContent = "Saving the image…";
+    fitImage(file).then(function (blob) {
+      var rev = new Date().toISOString();
+      if (localPreview && localPreview.url) URL.revokeObjectURL(localPreview.url);
+      localPreview = { rev: rev, url: URL.createObjectURL(blob) };
+      var upload = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.uploadImage(blob) : Promise.resolve(true);
+      return upload.then(function (ok) {
+        if (!ok) {
+          status.textContent = "The image could not be saved. Try a smaller photo.";
+          return;
+        }
+        saveAnnouncement({ on: true, rev: rev });
+      });
+    }).catch(function () {
+      status.textContent = "That file could not be used. Choose a photo.";
+    });
+  });
+  document.getElementById("announce-on").addEventListener("change", function (event) {
+    var item = settings.announcement || { on: false, rev: "" };
+    if (window.MasjidSync && MasjidSync.mode() === "follow") {
+      event.target.checked = !!item.on;
+      return;
+    }
+    if (event.target.checked && !item.rev) {
+      event.target.checked = false;
+      document.getElementById("announce-status").textContent = "Choose an image first.";
+      return;
+    }
+    saveAnnouncement({ on: event.target.checked, rev: item.rev });
+  });
+  document.getElementById("announce-remove").addEventListener("click", function () {
+    if (window.MasjidSync && MasjidSync.mode() === "follow") return;
+    var done = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.deleteImage() : Promise.resolve(true);
+    done.then(function () {
+      if (localPreview && localPreview.url) URL.revokeObjectURL(localPreview.url);
+      localPreview = null;
+      saveAnnouncement({ on: false, rev: "" });
+    });
+  });
 
   enterFullscreen();
   syncFillHint();
@@ -915,11 +1075,11 @@
   document.addEventListener("webkitfullscreenchange", syncFillHint);
 
   if (window.MasjidSync && MasjidSync.mode() !== "off") {
-    var sharedLead = "Press S to open this panel, A to add athkaar, and Escape to close. ";
-    var reminderLead = " Reminders cover the screen for a few seconds each minute, and they pause during iqamah and salah.";
+    var sharedLead = "On a phone, tap Settings, Athkaar, or Announcements at the top. On a keyboard, press S for settings, A for athkaar, and Escape to close. ";
+    var reminderLead = " A change reloads every other open screen within a couple of seconds. Reminders cover the screen for a few seconds each minute, and they pause during iqamah and salah.";
     if (MasjidSync.mode() === "live") {
-      document.querySelector("#settings .lead").textContent = sharedLead + "Changes here are used by every screen that opens this website." + reminderLead;
-      document.querySelector("#athkaar-editor .lead").textContent = "Press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select and saved for every screen that opens this website.";
+      document.querySelector("#settings .lead").textContent = sharedLead + "Changes here are saved for every screen that opens this website, on any phone or network." + reminderLead;
+      document.querySelector("#athkaar-editor .lead").textContent = "On a phone, tap Athkaar at the top. On a keyboard, press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select and saved for every screen that opens this website.";
       document.getElementById("athkaar-added-title").textContent = "Added for every screen";
     } else {
       document.querySelector("#settings .lead").textContent = sharedLead + "This screen follows the settings saved on rashiid.m2btek.com whenever it is online." + reminderLead;
@@ -929,7 +1089,7 @@
         return { settings: settings, athkaar: ATHKAAR.loadExtra() };
       },
       busy: function () {
-        return !el.settings.hidden || !athkaarPanel().hidden;
+        return !el.settings.hidden || !athkaarPanel().hidden || !announcePanel().hidden;
       },
       apply: function (data) {
         if (data.settings) saveSettings(settingsFrom(data.settings), true);

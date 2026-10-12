@@ -61,12 +61,20 @@
     </div>
   </div>
 
+  <div id="announce" hidden>
+    <img id="announce-img" alt="">
+  </div>
   <p class="preview" id="preview" hidden>Preview clock — not for the hall screen</p>
   <p id="fill-hint" hidden>Tap or press any key to fill the screen</p>
+  <div id="manage">
+    <button type="button" id="manage-settings">Settings</button>
+    <button type="button" id="manage-athkaar">Athkaar</button>
+    <button type="button" id="manage-announce">Announcements</button>
+  </div>
 
   <form class="settings" id="settings" hidden>
     <h2>Screen settings</h2>
-    <p class="lead">Press S to open this panel, A to add athkaar, and Escape to close. Iqamah, the masjid name, added athkaar, and the reminders are saved on this computer only. Reminders of what not to do cover the screen for a few seconds each minute, and they pause during iqamah and salah.</p>
+    <p class="lead">On a phone, tap Settings, Athkaar, or Announcements at the top. On a keyboard, press S for settings, A for athkaar, and Escape to close. Iqamah, the masjid name, added athkaar, and the reminders are saved on this computer only until this screen is opened from the website. Reminders of what not to do cover the screen for a few seconds each minute, and they pause during iqamah and salah.</p>
     <div class="fields">
       <label>English name <input id="set-name-en" autocomplete="off"></label>
       <label>Arabic name <input id="set-name-ar" lang="ar" dir="rtl" autocomplete="off"></label>
@@ -120,7 +128,7 @@
 
   <form class="settings" id="athkaar-editor" hidden>
     <h2>Athkaar lists</h2>
-    <p class="lead">Press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select and saved on this computer.</p>
+    <p class="lead">On a phone, tap Athkaar at the top. On a keyboard, press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select.</p>
     <div class="list-switch" id="athkaar-switch">
       <button type="button" data-list="after">After salah</button>
       <button type="button" data-list="general">General</button>
@@ -141,6 +149,22 @@
       <button type="button" class="primary" id="athkaar-add">Add to this list</button>
       <button type="button" id="athkaar-close">Close</button>
     </div>
+  </form>
+
+  <form class="settings" id="announcements" hidden>
+    <h2>Announcements</h2>
+    <p class="lead">Choose one image. It covers the whole hall screen on every device until you turn it off. Other open screens reload themselves and show it.</p>
+    <p id="announce-status" class="lead"></p>
+    <img id="announce-preview" alt="" hidden>
+    <label class="check">Show this image on every screen
+      <input id="announce-on" type="checkbox">
+    </label>
+    <div class="actions">
+      <button type="button" class="primary" id="announce-pick">Choose an image</button>
+      <button type="button" id="announce-remove">Remove image</button>
+      <button type="button" id="announce-close">Close</button>
+    </div>
+    <input id="announce-file" type="file" accept="image/*" hidden>
   </form>
 
   <!-- Prayer times: PrayTimes.org (Hamid Zarrabi-Zadeh), vendored for offline use. -->

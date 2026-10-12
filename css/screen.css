@@ -464,6 +464,8 @@ html, body {
 #iq[hidden],
 #full[hidden],
 #notice[hidden],
+#announce[hidden],
+#announce-preview[hidden],
 .preview[hidden],
 #fill-hint[hidden],
 .settings[hidden] {
@@ -497,6 +499,78 @@ html, body {
   font-size: 18px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+#announce {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  background: #000;
+}
+
+#announce img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+#announce-preview {
+  display: block;
+  width: min(100%, 920px);
+  max-height: 320px;
+  margin: 0 0 8px;
+  object-fit: contain;
+  background: #000;
+  border-radius: 12px;
+  border: 1px solid rgba(227, 196, 107, 0.45);
+}
+
+#announce-preview[hidden] {
+  display: none;
+}
+
+#announce-status {
+  min-height: 1.4em;
+  color: #e3c46b;
+}
+
+label.check {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 18px;
+  font-size: 18px;
+}
+
+#manage {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  #manage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 7;
+    display: flex;
+    gap: 8px;
+    padding: calc(8px + env(safe-area-inset-top)) 8px 8px;
+    background: rgba(4, 20, 13, 0.96);
+    border-bottom: 1px solid #e3c46b;
+  }
+
+  #manage button {
+    flex: 1;
+    min-height: 48px;
+    padding: 8px 6px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: normal;
+    background: #e3c46b;
+    color: #10281c;
+  }
 }
 
 .settings {
@@ -560,6 +634,12 @@ input, select, textarea {
   padding: 10px 12px;
   font: inherit;
   font-size: 18px;
+}
+
+input[type="checkbox"] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
 }
 
 textarea {
@@ -668,4 +748,40 @@ button.primary {
   background: #e3c46b;
   color: #10281c;
   font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .settings {
+    padding: 72px 16px 32px;
+  }
+
+  .settings h2 {
+    font-size: 28px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .notice-row {
+    grid-template-columns: 1fr;
+  }
+
+  .athkaar-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .settings button {
+    min-height: 48px;
+  }
+
+  textarea {
+    font-size: 24px;
+    min-height: 120px;
+  }
 }

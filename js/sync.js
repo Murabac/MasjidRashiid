@@ -1,8 +1,10 @@
 /* Shared screen settings for rashiid.m2btek.com. Other copies only follow that site. */
 var MasjidSync = (function () {
   var SITE = "rashiid.m2btek.com";
-  var REMOTE = "https://rashiid.m2btek.com/api/settings";
+  var ORIGIN = "https://rashiid.m2btek.com";
   var updatedAt = "";
+  var seen = false;
+  var writing = false;
   var pending = null;
   var pushTimer = null;
 
@@ -13,7 +15,12 @@ var MasjidSync = (function () {
   }
 
   function endpoint() {
-    return mode() === "live" ? "/api/settings" : REMOTE;
+    return mode() === "live" ? "/api/settings" : ORIGIN + "/api/settings";
+  }
+
+  function imageUrl(rev) {
+    var base = mode() === "live" ? "/api/announcement" : ORIGIN + "/api/announcement";
+    return base + "?rev=" + encodeURIComponent(rev || "");
   }
 
   function pull() {
@@ -32,13 +39,14 @@ var MasjidSync = (function () {
     if (partial.settings) pending.settings = partial.settings;
     if (partial.athkaar) pending.athkaar = partial.athkaar;
     clearTimeout(pushTimer);
-    pushTimer = setTimeout(flush, 500);
+    pushTimer = setTimeout(flush, 300);
   }
 
   function flush() {
     var body = pending;
     pending = null;
     if (!body) return;
+    writing = true;
     fetch("/api/settings", {
       method: "PUT",
       headers: { "content-type": "application/json" },
@@ -46,8 +54,35 @@ var MasjidSync = (function () {
     }).then(function (response) {
       return response.ok ? response.json() : null;
     }).then(function (data) {
-      if (data && data.updatedAt) updatedAt = data.updatedAt;
-    }).catch(function () {});
+      if (data && data.updatedAt) {
+        updatedAt = data.updatedAt;
+        seen = true;
+      }
+    }).catch(function () {}).then(function () {
+      writing = false;
+    });
+  }
+
+  function uploadImage(blob) {
+    if (mode() !== "live") return Promise.resolve(false);
+    return fetch("/api/announcement", {
+      method: "PUT",
+      headers: { "content-type": blob.type || "image/jpeg" },
+      body: blob
+    }).then(function (response) {
+      return response.ok;
+    }).catch(function () {
+      return false;
+    });
+  }
+
+  function deleteImage() {
+    if (mode() !== "live") return Promise.resolve(false);
+    return fetch("/api/announcement", { method: "DELETE" }).then(function (response) {
+      return response.ok;
+    }).catch(function () {
+      return false;
+    });
   }
 
   function start(handlers) {
@@ -56,18 +91,29 @@ var MasjidSync = (function () {
       pull().then(function (data) {
         if (!data) return;
         if (!data.updatedAt) {
-          if (mode() === "live") push(handlers.snapshot());
+          if (mode() === "live" && !writing) push(handlers.snapshot());
           return;
         }
-        if (data.updatedAt === updatedAt) return;
-        if (handlers.busy()) return;
-        updatedAt = data.updatedAt;
-        handlers.apply(data);
+        if (!seen) {
+          seen = true;
+          updatedAt = data.updatedAt;
+          if (!handlers.busy()) handlers.apply(data);
+          return;
+        }
+        if (data.updatedAt === updatedAt || writing || handlers.busy()) return;
+        location.reload();
       });
     }
     tick();
-    setInterval(tick, 15000);
+    setInterval(tick, 2000);
   }
 
-  return { mode: mode, push: push, start: start };
+  return {
+    mode: mode,
+    push: push,
+    start: start,
+    imageUrl: imageUrl,
+    uploadImage: uploadImage,
+    deleteImage: deleteImage
+  };
 })();

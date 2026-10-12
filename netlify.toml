@@ -1,9 +1,19 @@
 [build]
+  command = "npm install --omit=dev"
   publish = "."
   functions = "netlify/functions"
+
+[functions]
+  directory = "netlify/functions"
 
 [[redirects]]
   from = "/api/settings"
   to = "/.netlify/functions/settings"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/announcement"
+  to = "/.netlify/functions/announcement"
   status = 200
   force = true
