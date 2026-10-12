@@ -23,8 +23,12 @@ var MasjidSync = (function () {
     return base + "?rev=" + encodeURIComponent(rev || "");
   }
 
+  function quiet() {
+    return { then: function () { return this; } };
+  }
+
   function pull() {
-    if (mode() === "off") return Promise.resolve(null);
+    if (mode() === "off" || typeof fetch !== "function" || typeof Promise === "undefined") return quiet();
     return fetch(endpoint(), { cache: "no-store" }).then(function (response) {
       if (!response.ok) return null;
       return response.json();

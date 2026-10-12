@@ -182,32 +182,53 @@
   }
 
   function partsInHargeisa(date) {
-    var fmt = new Intl.DateTimeFormat("en-US", {
-      timeZone: TZ,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      weekday: "short",
-      hourCycle: "h23"
-    });
-    var bag = {};
-    fmt.formatToParts(date).forEach(function (part) {
-      if (part.type !== "literal") bag[part.type] = part.value;
-    });
-    var hour = Number(bag.hour);
-    if (hour === 24) hour = 0;
+    try {
+      var fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        weekday: "short",
+        hour12: false
+      });
+      if (fmt.formatToParts) {
+        var bag = {};
+        fmt.formatToParts(date).forEach(function (part) {
+          if (part.type !== "literal") bag[part.type] = part.value;
+        });
+        var hour = Number(bag.hour);
+        if (hour === 24) hour = 0;
+        if (bag.year && bag.month && bag.day) {
+          return {
+            year: Number(bag.year),
+            month: Number(bag.month),
+            day: Number(bag.day),
+            hour: hour,
+            minute: Number(bag.minute),
+            second: Number(bag.second),
+            weekday: bag.weekday
+          };
+        }
+      }
+    } catch (err) {}
+    var shifted = new Date(date.getTime() + TZ_HOURS * 3600000);
+    var weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return {
-      year: Number(bag.year),
-      month: Number(bag.month),
-      day: Number(bag.day),
-      hour: hour,
-      minute: Number(bag.minute),
-      second: Number(bag.second),
-      weekday: bag.weekday
+      year: shifted.getUTCFullYear(),
+      month: shifted.getUTCMonth() + 1,
+      day: shifted.getUTCDate(),
+      hour: shifted.getUTCHours(),
+      minute: shifted.getUTCMinutes(),
+      second: shifted.getUTCSeconds(),
+      weekday: weekdays[shifted.getUTCDay()]
     };
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
   }
 
   function wallToDate(y, m, d, hh, mm, ss) {
@@ -354,18 +375,28 @@
 
   function renderClock(moment) {
     var clock = formatClock(moment);
-    el.clock.replaceChildren(document.createTextNode(clock.hms + " "));
+    clearNode(el.clock);
+    el.clock.appendChild(document.createTextNode(clock.hms + " "));
     var mark = document.createElement("small");
     mark.textContent = clock.ap;
     el.clock.appendChild(mark);
 
-    var gregorian = new Intl.DateTimeFormat("en-GB", {
-      timeZone: TZ,
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    }).format(moment);
+    var gregorian = "";
+    try {
+      gregorian = new Intl.DateTimeFormat("en-GB", {
+        timeZone: TZ,
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(moment);
+    } catch (err) {
+      var p = partsInHargeisa(moment);
+      var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      var shifted = new Date(moment.getTime() + TZ_HOURS * 3600000);
+      gregorian = days[shifted.getUTCDay()] + ", " + p.day + " " + months[p.month - 1] + " " + p.year;
+    }
     var hijri = "";
     try {
       hijri = new Intl.DateTimeFormat("en-GB-u-ca-islamic", {
@@ -377,7 +408,7 @@
     } catch (err) {
       hijri = "";
     }
-    el.dates.replaceChildren();
+    clearNode(el.dates);
     if (hijri) {
       var bold = document.createElement("b");
       bold.textContent = /AH/.test(hijri) ? hijri : hijri + " AH";
@@ -390,7 +421,8 @@
   function renderNext(schedule, moment) {
     var focus = schedule.next;
     if (!focus) return;
-    el.nextLabel.replaceChildren(document.createTextNode("Next prayer — " + focus.en + "  "));
+    clearNode(el.nextLabel);
+    el.nextLabel.appendChild(document.createTextNode("Next prayer — " + focus.en + "  "));
     var ar = document.createElement("span");
     ar.className = "ar";
     ar.lang = "ar";
@@ -423,7 +455,7 @@
     var sig = rows + "|" + sun + "|" + highlight + "|" + past + "|" + (sunPast ? "1" : "0") + "|" + (schedule.today.friday ? "f" : "d");
     if (sig === timesSig) return;
     timesSig = sig;
-    el.rows.replaceChildren();
+    clearNode(el.rows);
 
     var head = document.createElement("div");
     head.className = "row head";
@@ -537,7 +569,7 @@
     el.slideCount.textContent = (index + 1) + "  /  " + slides.length;
     if (id === slideSig) return;
     slideSig = id;
-    el.athkaarText.replaceChildren();
+    clearNode(el.athkaarText);
     slide.lines.forEach(function (line) {
       var p = document.createElement("p");
       p.textContent = line;
@@ -690,7 +722,7 @@
 
   function renderNoticeEditor() {
     var box = document.getElementById("notice-list");
-    box.replaceChildren();
+    clearNode(box);
     settings.notices.forEach(function (item, index) {
       var row = document.createElement("div");
       row.className = "notice-row";
@@ -865,8 +897,8 @@
     });
     var builtin = document.getElementById("athkaar-builtin");
     var custom = document.getElementById("athkaar-custom");
-    builtin.replaceChildren();
-    custom.replaceChildren();
+    clearNode(builtin);
+    clearNode(custom);
     ATHKAAR.builtin(athkaarList).forEach(function (slide) {
       var item = document.createElement("div");
       item.className = "athkaar-item";
@@ -981,7 +1013,21 @@
     addAthkaar();
   });
 
-  var testValue = new URLSearchParams(location.search).get("at");
+  function queryParam(name) {
+    var query = location.search.charAt(0) === "?" ? location.search.substring(1) : location.search;
+    var parts = query.split("&");
+    for (var i = 0; i < parts.length; i++) {
+      var pair = parts[i].split("=");
+      if (decodeURIComponent(pair[0] || "") === name) return decodeURIComponent(pair[1] || "");
+    }
+    return "";
+  }
+
+  if (window.NodeList && !NodeList.prototype.forEach) {
+    NodeList.prototype.forEach = Array.prototype.forEach;
+  }
+
+  var testValue = queryParam("at");
   virtualOrigin = parseTestClock(testValue);
   if (virtualOrigin) el.preview.hidden = false;
 

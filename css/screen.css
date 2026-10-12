@@ -214,7 +214,10 @@ html, body {
 #frame,
 #iq {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: 28px;
   overflow: hidden;
 }
@@ -318,7 +321,10 @@ html, body {
 
 #full {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 3;
   overflow: hidden;
   display: flex;
@@ -409,7 +415,10 @@ html, body {
 
 #notice {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 4;
   background: #000;
   display: flex;
@@ -503,7 +512,10 @@ html, body {
 
 #announce {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 6;
   background: #000;
 }
@@ -577,7 +589,10 @@ label.check {
 
 .settings {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 6;
   overflow: auto;
   background: #04140d;
