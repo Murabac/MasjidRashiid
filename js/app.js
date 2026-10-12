@@ -78,8 +78,8 @@
     iqAr: document.getElementById("iq-ar"),
     iqCount: document.getElementById("iq-count"),
     full: document.getElementById("full"),
-    fullAr: document.getElementById("full-ar"),
     fullEn: document.getElementById("full-en"),
+    fullAr: document.getElementById("full-ar"),
     notice: document.getElementById("notice"),
     noticeIcon: document.getElementById("notice-icon"),
     noticeSo: document.getElementById("notice-so"),
@@ -275,7 +275,7 @@
       var stamp = times[item.key];
       if (!stamp || stamp === "-----") return null;
       var bits = stamp.split(":");
-      var adhan = wallToDate(y, m, d, Number(bits[0]), Number(bits[1]), 0);
+      var adhan = new Date(wallToDate(y, m, d, Number(bits[0]), Number(bits[1]), 0).getTime() + 60000);
       var iqamahMin = friday && item.key === "dhuhr" ? settings.iqamah.jumuah : settings.iqamah[item.key];
       var lengthMin = friday && item.key === "dhuhr" ? settings.jumuahMinutes : settings.salahMinutes;
       var iqamah = new Date(adhan.getTime() + iqamahMin * 60000);
@@ -492,12 +492,9 @@
     }
 
     if (inSalah) {
-      var fullId = "salah:" + prayer.key + ":" + prayer.adhan.getTime();
-      if (slideSig !== fullId) {
-        slideSig = fullId;
-        el.fullAr.textContent = prayer.ar;
-        el.fullEn.textContent = prayer.en;
-      }
+      el.fullEn.textContent = prayer.en;
+      el.fullAr.textContent = prayer.ar;
+      slideSig = "salah:" + prayer.key + ":" + prayer.adhan.getTime();
       return;
     }
 

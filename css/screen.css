@@ -319,37 +319,92 @@ html, body {
 #full {
   position: absolute;
   inset: 0;
-  background: #000;
+  z-index: 3;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #0c2418;
+}
+
+#full img {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+#full .now,
+#full .quiet {
+  flex: none;
+  text-align: center;
+  background: #0c2418;
+}
+
+#full .now {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 28px;
+  padding: 10px 40px 8px;
+  white-space: nowrap;
+}
+
+#full .now .tag {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e3c46b;
+}
+
+#full .now .en {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f6f1e1;
+}
+
+#full .now .ar {
+  font-family: Amiri, "Traditional Arabic", serif;
+  font-size: 58px;
+  font-weight: 700;
+  line-height: 1;
+  color: #e3c46b;
+}
+
+#full .quiet {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  z-index: 3;
+  gap: 14px;
+  padding: 20px 72px 24px;
+  border-top: 3px solid #e3c46b;
 }
 
-#full .a {
+#full .quiet .so {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: #f6f1e1;
+}
+
+#full .quiet .so:after {
+  content: "";
+  display: block;
+  width: 140px;
+  height: 2px;
+  margin: 14px auto 0;
+  background: #e3c46b;
+}
+
+#full .quiet .ar {
   font-family: Amiri, "Traditional Arabic", serif;
-  font-size: 180px;
+  font-size: 46px;
   font-weight: 700;
+  line-height: 1.7;
   color: #e3c46b;
-  line-height: 1.1;
-}
-
-#full .p {
-  font-size: 84px;
-  font-weight: 700;
-  margin-bottom: 18px;
-}
-
-#full .s {
-  font-size: 72px;
-  margin-bottom: 18px;
-}
-
-#full .m {
-  font-size: 42px;
-  color: #aab8ae;
 }
 
 #notice {
