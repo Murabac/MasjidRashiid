@@ -93,8 +93,12 @@
           <option value="Hanafi">Hanafi</option>
         </select>
       </label>
-      <label>Latitude <input id="set-lat" inputmode="decimal"></label>
-      <label>Longitude <input id="set-lng" inputmode="decimal"></label>
+      <div class="place">
+        <p class="lead" id="set-place"></p>
+        <div class="actions place-actions">
+          <button type="button" class="primary" id="set-place-btn">Use current location</button>
+        </div>
+      </div>
 
       <h3>Iqamah, minutes after adhan</h3>
       <label>Fajr <input id="set-iq-fajr" type="number" min="0" max="180"></label>

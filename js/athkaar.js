@@ -11,7 +11,7 @@ var ATHKAAR = (function () {
       english: "O Allah, You are Peace and from You comes peace. Blessed are You, Owner of majesty and honor."
     },
     {
-      lines: ["سُبْحَانَ اللَّهِ  × ٣٣", "الْحَمْدُ لِلَّهِ  × ٣٣", "اللَّهُ أَكْبَرُ  × ٣٣"],
+      lines: ["سُبْحَانَ اللَّهِ  × 33", "الْحَمْدُ لِلَّهِ  × 33", "اللَّهُ أَكْبَرُ  × 33"],
       english: "Glory is to Allah, 33 times. Praise is to Allah, 33 times. Allah is the Greatest, 33 times."
     },
     {

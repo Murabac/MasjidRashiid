@@ -113,7 +113,9 @@ html, body {
 
 #dates b {
   color: #e3c46b;
-  font-weight: 600;
+  font-family: "Amiri", "Source Sans 3", serif;
+  font-weight: 700;
+  font-size: 36px;
 }
 
 #next {
@@ -743,6 +745,18 @@ input:focus, select:focus, textarea:focus {
 
 .actions.notice-add {
   margin-top: 12px;
+}
+
+.place {
+  grid-column: 1 / -1;
+}
+
+.place .lead {
+  margin: 0 0 12px;
+}
+
+.place-actions {
+  margin-top: 0;
 }
 
 .actions {

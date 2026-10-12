@@ -388,7 +388,8 @@
         weekday: "long",
         day: "numeric",
         month: "long",
-        year: "numeric"
+        year: "numeric",
+        numberingSystem: "latn"
       }).format(moment);
     } catch (err) {
       var p = partsInHargeisa(moment);
@@ -397,25 +398,103 @@
       var shifted = new Date(moment.getTime() + TZ_HOURS * 3600000);
       gregorian = days[shifted.getUTCDay()] + ", " + p.day + " " + months[p.month - 1] + " " + p.year;
     }
-    var hijri = "";
-    try {
-      hijri = new Intl.DateTimeFormat("en-GB-u-ca-islamic", {
-        timeZone: TZ,
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      }).format(moment);
-    } catch (err) {
-      hijri = "";
-    }
+    var hijri = formatHijri(moment);
     clearNode(el.dates);
     if (hijri) {
       var bold = document.createElement("b");
-      bold.textContent = /AH/.test(hijri) ? hijri : hijri + " AH";
+      bold.lang = "ar";
+      bold.dir = "rtl";
+      bold.textContent = hijri;
       el.dates.appendChild(bold);
       el.dates.appendChild(document.createElement("br"));
     }
     el.dates.appendChild(document.createTextNode(gregorian));
+  }
+
+  var HIJRI_MONTHS_AR = [
+    "محرم", "صفر", "ربيع الأول", "ربيع الآخر",
+    "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
+    "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+  ];
+
+  function latinDigits(value) {
+    return String(value).replace(/[٠-٩]/g, function (digit) {
+      return String("٠١٢٣٤٥٦٧٨٩".indexOf(digit));
+    }).replace(/[۰-۹]/g, function (digit) {
+      return String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit));
+    });
+  }
+
+  function hijriLabel(day, month, year) {
+    if (!(day >= 1 && day <= 30) || !(month >= 1 && month <= 12) || !(year > 1300 && year < 1600)) {
+      return "";
+    }
+    return day + " " + HIJRI_MONTHS_AR[month - 1] + " " + year + " هـ";
+  }
+
+  function hijriFromParts(moment) {
+    var locales = [
+      "en-GB-u-ca-islamic-umalqura",
+      "en-u-ca-islamic-umalqura",
+      "en-GB-u-ca-islamic",
+      "en-u-ca-islamic"
+    ];
+    for (var i = 0; i < locales.length; i++) {
+      try {
+        var fmt = new Intl.DateTimeFormat(locales[i], {
+          timeZone: TZ,
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          numberingSystem: "latn"
+        });
+        if (!fmt.formatToParts) continue;
+        var bag = {};
+        fmt.formatToParts(moment).forEach(function (part) {
+          if (part.type !== "literal") bag[part.type] = part.value;
+        });
+        if (!bag.day || !bag.month || !bag.year) continue;
+        if (bag.era && /BC|BCE/i.test(bag.era)) continue;
+        var label = hijriLabel(
+          Number(latinDigits(bag.day)),
+          Number(latinDigits(bag.month)),
+          Number(latinDigits(bag.year))
+        );
+        if (label) return label;
+      } catch (err) {}
+    }
+    return "";
+  }
+
+  function hijriCivil(moment) {
+    var p = partsInHargeisa(moment);
+    var gy = p.year;
+    var gm = p.month;
+    var gd = p.day;
+    var jd =
+      Math.floor((1461 * (gy + 4800 + Math.floor((gm - 14) / 12))) / 4) +
+      Math.floor((367 * (gm - 2 - 12 * Math.floor((gm - 14) / 12))) / 12) -
+      Math.floor((3 * Math.floor((gy + 4900 + Math.floor((gm - 14) / 12)) / 100)) / 4) +
+      gd - 32075;
+    var l = jd - 1948440 + 10632;
+    var n = Math.floor((l - 1) / 10631);
+    l = l - 10631 * n + 354;
+    var j =
+      Math.floor((10985 - l) / 5316) * Math.floor((50 * l) / 17719) +
+      Math.floor(l / 5670) * Math.floor((43 * l) / 15238);
+    l =
+      l -
+      Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+      Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
+      29;
+    var m = Math.floor((24 * l) / 709);
+    var d = l - Math.floor((709 * m) / 24);
+    var y = 30 * n + j - 30;
+    return hijriLabel(d, m, y);
+  }
+
+  function formatHijri(moment) {
+    return hijriFromParts(moment) || hijriCivil(moment);
   }
 
   function renderNext(schedule, moment) {
@@ -648,8 +727,6 @@
       "set-name-ar": settings.nameAr,
       "set-method": settings.method,
       "set-asr": settings.asr,
-      "set-lat": settings.lat,
-      "set-lng": settings.lng,
       "set-iq-fajr": settings.iqamah.fajr,
       "set-iq-dhuhr": settings.iqamah.dhuhr,
       "set-iq-asr": settings.iqamah.asr,
@@ -666,12 +743,23 @@
     };
   }
 
+  function placeText(lat, lng, note) {
+    var line = Number(lat).toFixed(4) + ", " + Number(lng).toFixed(4);
+    return note ? note + " (" + line + ")" : "Location for salah times: " + line;
+  }
+
+  function fillPlace(note) {
+    var box = document.getElementById("set-place");
+    if (box) box.textContent = placeText(settings.lat, settings.lng, note);
+  }
+
   function fillForm() {
     var map = fieldMap();
     Object.keys(map).forEach(function (id) {
       document.getElementById(id).value = map[id];
     });
     document.getElementById("set-notice-on").checked = settings.noticesOn !== false;
+    fillPlace();
     renderNoticeEditor();
   }
 
@@ -683,8 +771,8 @@
     var asr = document.getElementById("set-asr").value;
     if (METHODS[method]) next.method = method;
     if (asr === "Hanafi" || asr === "Standard") next.asr = asr;
-    next.lat = clamp(document.getElementById("set-lat").value, next.lat, -90, 90);
-    next.lng = clamp(document.getElementById("set-lng").value, next.lng, -180, 180);
+    next.lat = settings.lat;
+    next.lng = settings.lng;
     next.iqamah.fajr = clamp(document.getElementById("set-iq-fajr").value, next.iqamah.fajr, 0, 180);
     next.iqamah.dhuhr = clamp(document.getElementById("set-iq-dhuhr").value, next.iqamah.dhuhr, 0, 180);
     next.iqamah.asr = clamp(document.getElementById("set-iq-asr").value, next.iqamah.asr, 0, 180);
@@ -994,6 +1082,29 @@
     if (fields.length) fields[fields.length - 1].focus();
   });
   document.getElementById("set-close").addEventListener("click", closeSettings);
+  document.getElementById("set-place-btn").addEventListener("click", function () {
+    var status = document.getElementById("set-place");
+    if (!navigator.geolocation) {
+      fillPlace("Location is not available on this device");
+      return;
+    }
+    status.textContent = "Getting your location…";
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var next = settingsFrom(settings);
+      next.lat = clamp(pos.coords.latitude, next.lat, -90, 90);
+      next.lng = clamp(pos.coords.longitude, next.lng, -180, 180);
+      saveSettings(next);
+      fillPlace("Location updated");
+    }, function (err) {
+      fillPlace(err && err.code === 1
+        ? "Allow location access, then try again"
+        : "Could not get the location. Try again");
+    }, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    });
+  });
   document.getElementById("set-reset").addEventListener("click", function () {
     var next = defaultSettings();
     next.announcement = settings.announcement;
