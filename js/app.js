@@ -98,7 +98,7 @@
       asr: "Standard",
       lat: 9.5624,
       lng: 44.077,
-      iqamah: { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 15, jumuah: 30 },
+      iqamah: { fajr: 20, dhuhr: 20, asr: 20, maghrib: 5, isha: 15, jumuah: 30 },
       salahMinutes: 10,
       jumuahMinutes: 40,
       afterMinutes: 60,
@@ -132,6 +132,12 @@
       Object.keys(base.iqamah).forEach(function (key) {
         base.iqamah[key] = clamp(iq[key], base.iqamah[key], 0, 180);
       });
+      var previousIqamah = base.iqamah.fajr === 20 && base.iqamah.dhuhr === 15 && base.iqamah.asr === 15 && base.iqamah.maghrib === 10 && base.iqamah.isha === 15;
+      if (previousIqamah) {
+        base.iqamah.dhuhr = 20;
+        base.iqamah.asr = 20;
+        base.iqamah.maghrib = 5;
+      }
       base.salahMinutes = clamp(raw.salahMinutes, base.salahMinutes, 1, 180);
       base.jumuahMinutes = clamp(raw.jumuahMinutes, base.jumuahMinutes, 1, 180);
       base.afterMinutes = clamp(raw.afterMinutes, base.afterMinutes, 1, 180);
@@ -578,10 +584,29 @@
   }
 
   function fitStage() {
-    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    var view = window.visualViewport;
+    var w = view ? view.width : window.innerWidth;
+    var h = view ? view.height : window.innerHeight;
+    var x = view ? view.offsetLeft : 0;
+    var y = view ? view.offsetTop : 0;
+    var phone = w <= 1100;
+    var portrait = phone && h > w;
+    document.documentElement.classList.toggle("is-portrait", portrait);
+    if (portrait) {
+      el.stage.style.transform = "none";
+      el.stage.style.left = x + "px";
+      el.stage.style.top = y + "px";
+      el.stage.style.width = w + "px";
+      el.stage.style.height = h + "px";
+      requestAnimationFrame(fitAthkaar);
+      return;
+    }
+    el.stage.style.width = "1920px";
+    el.stage.style.height = "1080px";
+    var scale = phone ? Math.max(w / 1920, h / 1080) : Math.min(w / 1920, h / 1080);
     el.stage.style.transform = "scale(" + scale + ")";
-    el.stage.style.left = ((window.innerWidth - 1920 * scale) / 2) + "px";
-    el.stage.style.top = ((window.innerHeight - 1080 * scale) / 2) + "px";
+    el.stage.style.left = (x + (w - 1920 * scale) / 2) + "px";
+    el.stage.style.top = (y + (h - 1080 * scale) / 2) + "px";
     fitAthkaar();
   }
 
@@ -963,6 +988,11 @@
   applyNames();
   fitStage();
   window.addEventListener("resize", fitStage);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitStage);
+    window.visualViewport.addEventListener("scroll", fitStage);
+  }
+  window.addEventListener("orientationchange", fitStage);
   tick();
   setInterval(tick, 250);
   try {
