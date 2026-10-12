@@ -117,11 +117,10 @@
     return Math.min(max, Math.max(min, n));
   }
 
-  function loadSettings() {
+  function settingsFrom(raw) {
     var base = defaultSettings();
+    if (!raw || typeof raw !== "object") return base;
     try {
-      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (!raw || typeof raw !== "object") return base;
       base.nameEn = String(raw.nameEn || base.nameEn);
       base.nameAr = String(raw.nameAr || base.nameAr);
       if (METHODS[raw.method]) base.method = raw.method;
@@ -152,7 +151,15 @@
     return base;
   }
 
-  function saveSettings(next) {
+  function loadSettings() {
+    try {
+      return settingsFrom(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+    } catch (err) {
+      return defaultSettings();
+    }
+  }
+
+  function saveSettings(next, localOnly) {
     settings = next;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     timesSig = "";
@@ -160,6 +167,7 @@
     noticeSig = "";
     applyNames();
     tick();
+    if (!localOnly && window.MasjidSync) MasjidSync.push({ settings: next });
   }
 
   function partsInHargeisa(date) {
@@ -867,4 +875,64 @@
   try {
     if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function () {});
   } catch (err) {}
+
+  function tvBrowser() {
+    var ua = navigator.userAgent || "";
+    if (/Smart-?TV|Tizen|Web0S|WebOS|BRAVIA|AFT|CrKey|HbbTV|Viera|NetCast|VIDAA|GoogleTV|Android TV|AppleTV/i.test(ua)) return true;
+    var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(hover: none)").matches;
+    return !!coarse && Math.min(screen.width, screen.height) >= 720;
+  }
+
+  function enterFullscreen() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) return;
+    var root = document.documentElement;
+    var request = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!request) return;
+    function plain() {
+      try {
+        var again = request.call(root);
+        if (again && again.catch) again.catch(function () {});
+      } catch (err) {}
+    }
+    try {
+      var pending = request.call(root, { navigationUI: "hide" });
+      if (pending && pending.then) pending.then(null, plain);
+    } catch (err) {
+      plain();
+    }
+  }
+
+  if (tvBrowser()) {
+    enterFullscreen();
+    document.addEventListener("keydown", enterFullscreen);
+    document.addEventListener("pointerdown", enterFullscreen);
+    document.addEventListener("click", enterFullscreen);
+  }
+
+  if (window.MasjidSync && MasjidSync.mode() !== "off") {
+    var sharedLead = "Press S to open this panel, A to add athkaar, and Escape to close. ";
+    var reminderLead = " Reminders cover the screen for a few seconds each minute, and they pause during iqamah and salah.";
+    if (MasjidSync.mode() === "live") {
+      document.querySelector("#settings .lead").textContent = sharedLead + "Changes here are used by every screen that opens this website." + reminderLead;
+      document.querySelector("#athkaar-editor .lead").textContent = "Press A to open this panel and Escape to close. Type one athkaar in Arabic. Use a new line for each line of the same athkaar. It is added to the list you select and saved for every screen that opens this website.";
+      document.getElementById("athkaar-added-title").textContent = "Added for every screen";
+    } else {
+      document.querySelector("#settings .lead").textContent = sharedLead + "This screen follows the settings saved on rashiid.m2btek.com whenever it is online." + reminderLead;
+    }
+    MasjidSync.start({
+      snapshot: function () {
+        return { settings: settings, athkaar: ATHKAAR.loadExtra() };
+      },
+      busy: function () {
+        return !el.settings.hidden || !athkaarPanel().hidden;
+      },
+      apply: function (data) {
+        if (data.settings) saveSettings(settingsFrom(data.settings), true);
+        if (data.athkaar) {
+          ATHKAAR.replaceExtra(data.athkaar, true);
+          slideSig = "";
+        }
+      }
+    });
+  }
 })();

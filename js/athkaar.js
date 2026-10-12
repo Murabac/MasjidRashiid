@@ -153,8 +153,20 @@ var ATHKAAR = (function () {
     return extra;
   }
 
-  function saveExtra(extra) {
+  function saveExtra(extra, localOnly) {
     localStorage.setItem(EXTRA_KEY, JSON.stringify(extra));
+    if (!localOnly && window.MasjidSync) MasjidSync.push({ athkaar: extra });
+  }
+
+  function replaceExtra(raw, localOnly) {
+    var extra = emptyExtra();
+    if (raw && typeof raw === "object") {
+      LISTS.forEach(function (key) {
+        if (Array.isArray(raw[key])) extra[key] = raw[key].map(cleanItem).filter(Boolean);
+      });
+    }
+    saveExtra(extra, localOnly);
+    return extra;
   }
 
   function afterSlides(prayerKey) {
@@ -189,6 +201,7 @@ var ATHKAAR = (function () {
     generalSlides: generalSlides,
     loadExtra: loadExtra,
     saveExtra: saveExtra,
+    replaceExtra: replaceExtra,
     builtin: builtin,
     lists: LISTS
   };

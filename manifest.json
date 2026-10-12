@@ -1,0 +1,9 @@
+{
+  "name": "Masjid Rashiid",
+  "short_name": "Rashiid",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "background_color": "#03100b",
+  "theme_color": "#03100b"
+}

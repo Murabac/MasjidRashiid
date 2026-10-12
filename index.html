@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03100b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Masjid Rashiid</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/screen.css">
 </head>
 <body>
@@ -118,7 +122,7 @@
     </div>
     <h3>Already on the screen</h3>
     <div id="athkaar-builtin" class="athkaar-catalog"></div>
-    <h3>Added on this computer</h3>
+    <h3 id="athkaar-added-title">Added on this computer</h3>
     <div id="athkaar-custom" class="athkaar-catalog"></div>
     <label>Arabic athkaar
       <textarea id="athkaar-new" lang="ar" dir="rtl" rows="5" placeholder="سُبْحَانَ اللَّهِ وَبِحَمْدِهِ"></textarea>
@@ -133,6 +137,7 @@
   </form>
 
   <!-- Prayer times: PrayTimes.org (Hamid Zarrabi-Zadeh), vendored for offline use. -->
+  <script src="js/sync.js"></script>
   <script src="vendor/PrayTimes.js"></script>
   <script src="js/athkaar.js"></script>
   <script src="js/app.js"></script>
