@@ -935,7 +935,6 @@
 
   function closeAnnounce() {
     announcePanel().hidden = true;
-    resumeFill();
   }
 
   function openAnnounce() {
@@ -1167,55 +1166,67 @@
   }
 
   function enterFullscreen() {
-    if (inFullscreen()) return;
+    if (inFullscreen()) return Promise.resolve(false);
     var root = document.documentElement;
     var request = root.requestFullscreen || root.webkitRequestFullscreen;
-    if (!request) return;
+    if (!request) return Promise.resolve(false);
     function plain() {
       try {
         var again = request.call(root);
-        if (again && again.then) again.then(syncFillHint, function () {});
-      } catch (err) {}
+        if (again && again.then) return again.then(function () { syncFillHint(); return true; }, function () { syncFillHint(); return false; });
+      } catch (err) {
+        return Promise.resolve(false);
+      }
+      syncFillHint();
+      return Promise.resolve(!!inFullscreen());
     }
     try {
       var pending = request.call(root, { navigationUI: "hide" });
-      if (pending && pending.then) pending.then(syncFillHint, plain);
+      if (pending && pending.then) {
+        return pending.then(function () { syncFillHint(); return true; }, plain);
+      }
     } catch (err) {
-      plain();
+      return plain();
     }
+    syncFillHint();
+    return Promise.resolve(!!inFullscreen());
   }
 
-  var fillTimers = [];
-  var wantFill = false;
+  function returnFill() {
+    return document.getElementById("return-fill");
+  }
 
-  function resumeFill() {
-    wantFill = true;
-    fillTimers.forEach(clearTimeout);
-    fillTimers = [];
-    enterFullscreen();
+  function hideReturnFill() {
+    var box = returnFill();
+    if (box) box.hidden = true;
+    try { sessionStorage.removeItem("masjid-want-fill"); } catch (err) {}
+  }
+
+  function showReturnFill() {
+    if (inFullscreen()) {
+      hideReturnFill();
+      return;
+    }
+    var box = returnFill();
+    if (box) box.hidden = false;
+    try { sessionStorage.setItem("masjid-want-fill", "1"); } catch (err) {}
     syncFillHint();
-    [0, 50, 200, 500, 1000].forEach(function (wait) {
-      fillTimers.push(setTimeout(function () {
-        if (!wantFill || inFullscreen()) {
-          if (inFullscreen()) wantFill = false;
-          syncFillHint();
-          return;
-        }
-        enterFullscreen();
-        syncFillHint();
-      }, wait));
+  }
+
+  function finishFill() {
+    return enterFullscreen().then(function (ok) {
+      if (ok || inFullscreen()) hideReturnFill();
+      else showReturnFill();
+      syncFillHint();
     });
   }
 
   function onFullscreenGesture(event) {
     if (event && (event.key === "Escape" || event.key === "Esc")) return;
     var target = event && event.target;
-    if (target && target.closest && target.closest("#manage, #settings, #athkaar-editor, #announcements")) {
-      if (wantFill) resumeFill();
-      return;
-    }
-    wantFill = false;
-    enterFullscreen();
+    if (target && target.closest && target.closest("#return-fill")) return;
+    if (target && target.closest && target.closest("#manage, #settings, #athkaar-editor, #announcements")) return;
+    finishFill();
   }
 
   document.getElementById("manage-settings").addEventListener("click", function (event) {
@@ -1230,17 +1241,27 @@
     event.stopPropagation();
     openAnnounce();
   });
-  document.getElementById("announce-close").addEventListener("click", closeAnnounce);
+  document.getElementById("announce-close").addEventListener("click", function () {
+    closeAnnounce();
+    finishFill();
+  });
+  document.getElementById("return-fill-btn").addEventListener("click", function (event) {
+    event.stopPropagation();
+    finishFill();
+  });
   document.getElementById("announce-pick").addEventListener("click", function () {
     if (window.MasjidSync && MasjidSync.mode() === "follow") return;
-    wantFill = true;
+    try { sessionStorage.setItem("masjid-want-fill", "1"); } catch (err) {}
     document.getElementById("announce-file").click();
   });
   document.getElementById("announce-file").addEventListener("change", function (event) {
     var file = event.target.files && event.target.files[0];
     event.target.value = "";
-    resumeFill();
-    if (!file || (window.MasjidSync && MasjidSync.mode() === "follow")) return;
+    enterFullscreen();
+    if (!file || (window.MasjidSync && MasjidSync.mode() === "follow")) {
+      if (!inFullscreen()) showReturnFill();
+      return;
+    }
     var status = document.getElementById("announce-status");
     status.textContent = "Saving the image…";
     fitImage(file).then(function (blob) {
@@ -1254,22 +1275,18 @@
           status.textContent = result && result.status === 413
             ? "That photo is too large. Try a smaller one."
             : "The image could not be saved. Please try again.";
-          resumeFill();
+          if (!inFullscreen()) showReturnFill();
           return;
         }
         saveAnnouncement({ on: true, rev: rev });
         closeAnnounce();
+        if (inFullscreen()) hideReturnFill();
+        else showReturnFill();
       });
     }).catch(function () {
       status.textContent = "That file could not be used. Choose a photo.";
-      resumeFill();
+      if (!inFullscreen()) showReturnFill();
     });
-  });
-  window.addEventListener("focus", function () {
-    if (wantFill) resumeFill();
-  });
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && wantFill) resumeFill();
   });
   document.getElementById("announce-on").addEventListener("change", function (event) {
     var item = settings.announcement || { on: false, rev: "" };
@@ -1295,12 +1312,21 @@
   });
 
   enterFullscreen();
+  try {
+    if (sessionStorage.getItem("masjid-want-fill") === "1" && !inFullscreen()) showReturnFill();
+  } catch (err) {}
   syncFillHint();
   ["keydown", "pointerup", "touchend", "click"].forEach(function (type) {
     document.addEventListener(type, onFullscreenGesture);
   });
-  document.addEventListener("fullscreenchange", syncFillHint);
-  document.addEventListener("webkitfullscreenchange", syncFillHint);
+  document.addEventListener("fullscreenchange", function () {
+    if (inFullscreen()) hideReturnFill();
+    syncFillHint();
+  });
+  document.addEventListener("webkitfullscreenchange", function () {
+    if (inFullscreen()) hideReturnFill();
+    syncFillHint();
+  });
 
   if (window.MasjidSync && MasjidSync.mode() !== "off") {
     var sharedLead = "On a phone, tap Settings, Athkaar, or Announcements at the top. On a keyboard, press S for settings, A for athkaar, and Escape to close. ";

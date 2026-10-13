@@ -105,6 +105,7 @@ var MasjidSync = (function () {
           return;
         }
         if (data.updatedAt === updatedAt || writing || handlers.busy()) return;
+        try { sessionStorage.setItem("masjid-want-fill", "1"); } catch (err) {}
         location.reload();
       });
     }

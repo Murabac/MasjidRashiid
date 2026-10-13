@@ -477,6 +477,7 @@ html, body {
 #notice[hidden],
 #announce[hidden],
 #announce-preview[hidden],
+#return-fill[hidden],
 .preview[hidden],
 #fill-hint[hidden],
 .settings[hidden] {
@@ -510,6 +511,32 @@ html, body {
   font-size: 18px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+#return-fill {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 16, 11, 0.72);
+}
+
+#return-fill-btn {
+  min-width: min(100%, 420px);
+  padding: 22px 28px;
+  border-radius: 16px;
+  border: 0;
+  background: #e3c46b;
+  color: #10281c;
+  font: inherit;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 #announce {
