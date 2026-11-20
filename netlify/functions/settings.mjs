@@ -1,4 +1,7 @@
 import { getStore } from "@netlify/blobs";
+import { purgeCache } from "@netlify/cache";
+
+const TAG = "masjid-screen";
 
 const MAX_BYTES = 120000;
 
@@ -32,7 +35,13 @@ export default async function handler(request) {
 
   if (request.method === "GET") {
     var saved = await store.get("screen", { type: "json" });
-    return json(saved || { settings: null, athkaar: null, updatedAt: null }, 200, "*");
+    var res = json(saved || { settings: null, athkaar: null, updatedAt: null }, 200, "*");
+    // Browsers always re-check, but Netlify's CDN keeps the answer until a PUT purges it,
+    // so polling screens are served from cache and do not run this function.
+    res.headers.set("cache-control", "public, max-age=0, must-revalidate");
+    res.headers.set("netlify-cdn-cache-control", "public, durable, s-maxage=31536000");
+    res.headers.set("netlify-cache-tag", TAG);
+    return res;
   }
 
   if (request.method === "PUT") {
@@ -53,6 +62,7 @@ export default async function handler(request) {
       updatedAt: new Date().toISOString()
     };
     await store.setJSON("screen", next);
+    try { await purgeCache({ tags: [TAG] }); } catch (err) {}
     return json(next, 200, live ? origin : "");
   }
 

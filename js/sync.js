@@ -8,7 +8,13 @@ var MasjidSync = (function () {
   var pending = null;
   var pushTimer = null;
 
+  // Phone/website sync is switched off: settings are changed only on the hall laptop
+  // and kept in that browser, so the screens make no Netlify function requests.
+  // Set to true to bring back phone changes through rashiid.m2btek.com.
+  var ENABLED = false;
+
   function mode() {
+    if (!ENABLED) return "off";
     if (location.hostname === SITE) return "live";
     if (location.protocol === "file:") return "follow";
     return "off";
@@ -89,9 +95,15 @@ var MasjidSync = (function () {
     });
   }
 
+  // Each poll is a Netlify function request (125,000/month on the free plan),
+  // With 4 hall screens, every 2 minutes keeps the worst case (~86k/month) under the limit
+  // even if the CDN cache misses; skip while the page is hidden.
+  var POLL_MS = 120000;
+
   function start(handlers) {
     if (mode() === "off") return;
     function tick() {
+      if (seen && document.hidden) return;
       pull().then(function (data) {
         if (!data) return;
         if (!data.updatedAt) {
@@ -110,7 +122,10 @@ var MasjidSync = (function () {
       });
     }
     tick();
-    setInterval(tick, 2000);
+    setInterval(tick, POLL_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) tick();
+    });
   }
 
   return {

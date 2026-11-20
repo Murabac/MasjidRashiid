@@ -861,6 +861,37 @@
   }
 
   var localPreview = null;
+  var IMAGE_KEY = "masjid-rashiid-announcement-image";
+
+  // With sync off, the announcement photo is kept in this browser so it survives a reload.
+  function storedImage(rev) {
+    try {
+      var saved = JSON.parse(localStorage.getItem(IMAGE_KEY) || "null");
+      return saved && saved.rev === rev ? saved.url : "";
+    } catch (err) {
+      return "";
+    }
+  }
+
+  function storeImage(rev, blob) {
+    return new Promise(function (resolve) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          localStorage.setItem(IMAGE_KEY, JSON.stringify({ rev: rev, url: reader.result }));
+          resolve(true);
+        } catch (err) {
+          resolve({ ok: false, status: 413 });
+        }
+      };
+      reader.onerror = function () { resolve(false); };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function forgetImage() {
+    try { localStorage.removeItem(IMAGE_KEY); } catch (err) {}
+  }
 
   function announcePanel() {
     return document.getElementById("announcements");
@@ -871,7 +902,7 @@
     if (!item.on || !item.rev) return "";
     if (localPreview && localPreview.rev === item.rev) return localPreview.url;
     if (window.MasjidSync && MasjidSync.mode() !== "off") return MasjidSync.imageUrl(item.rev);
-    return "";
+    return storedImage(item.rev);
   }
 
   function renderAnnounce() {
@@ -889,6 +920,7 @@
     var src = "";
     if (localPreview && item.rev && localPreview.rev === item.rev) src = localPreview.url;
     else if (item.rev && window.MasjidSync && MasjidSync.mode() !== "off") src = MasjidSync.imageUrl(item.rev);
+    else if (item.rev) src = storedImage(item.rev);
     preview.hidden = !src;
     if (src) preview.src = src;
     document.getElementById("announce-on").checked = !!item.on && !!item.rev;
@@ -1268,7 +1300,7 @@
       var rev = new Date().toISOString();
       if (localPreview && localPreview.url) URL.revokeObjectURL(localPreview.url);
       localPreview = { rev: rev, url: URL.createObjectURL(blob) };
-      var upload = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.uploadImage(blob) : Promise.resolve(true);
+      var upload = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.uploadImage(blob) : storeImage(rev, blob);
       return upload.then(function (result) {
         var saved = result === true || (result && result.ok);
         if (!saved) {
@@ -1305,6 +1337,7 @@
     if (window.MasjidSync && MasjidSync.mode() === "follow") return;
     var done = window.MasjidSync && MasjidSync.mode() === "live" ? MasjidSync.deleteImage() : Promise.resolve(true);
     done.then(function () {
+      forgetImage();
       if (localPreview && localPreview.url) URL.revokeObjectURL(localPreview.url);
       localPreview = null;
       saveAnnouncement({ on: false, rev: "" });

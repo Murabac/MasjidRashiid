@@ -2,6 +2,7 @@
   "name": "masjid-rashiid",
   "private": true,
   "dependencies": {
-    "@netlify/blobs": "11.1.4"
+    "@netlify/blobs": "11.1.4",
+    "@netlify/cache": "4.2.1"
   }
 }

@@ -1,4 +1,7 @@
 import { getStore } from "@netlify/blobs";
+import { purgeCache } from "@netlify/cache";
+
+const TAG = "masjid-announcement";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
@@ -38,7 +41,9 @@ export default async function handler(request) {
       status: 200,
       headers: {
         "content-type": meta.type,
-        "cache-control": "no-store",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "netlify-cdn-cache-control": "public, durable, s-maxage=31536000",
+        "netlify-cache-tag": TAG,
         "access-control-allow-origin": "*"
       }
     });
@@ -55,6 +60,7 @@ export default async function handler(request) {
     if (buf.byteLength < 32 || buf.byteLength > MAX_BYTES) return new Response("too large", { status: 413 });
     await store.set("announcement-image", buf);
     await store.setJSON("announcement-meta", { type: type, bytes: buf.byteLength });
+    try { await purgeCache({ tags: [TAG] }); } catch (err) {}
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "content-type": "application/json", "cache-control": "no-store" }
@@ -64,6 +70,7 @@ export default async function handler(request) {
   if (request.method === "DELETE") {
     try { await store.delete("announcement-image"); } catch (err) {}
     try { await store.delete("announcement-meta"); } catch (err) {}
+    try { await purgeCache({ tags: [TAG] }); } catch (err) {}
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "content-type": "application/json", "cache-control": "no-store" }
